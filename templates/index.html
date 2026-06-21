@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Age & Gender Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0e1a;
+            --bg-card: #121828;
+            --bg-card-hover: #1a2140;
+            --border-color: #2a3250;
+            --text-primary: #e8ecf4;
+            --text-secondary: #8892b0;
+            --accent-blue: #4a7dff;
+            --accent-green: #2ecc71;
+            --accent-purple: #8b5cf6;
+            --shadow-color: rgba(0,0,0,0.4);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #0d1117 0%, #161b33 100%) !important;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.8rem 0;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.4rem;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .navbar-brand i { -webkit-text-fill-color: initial; color: var(--accent-blue); margin-right: 8px; }
+        .container-main { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px var(--shadow-color);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .card:hover { border-color: rgba(74, 125, 255, 0.3); }
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.2rem 1.5rem;
+            font-weight: 600;
+        }
+        .card-body { padding: 1.5rem; }
+
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(74, 125, 255, 0.03);
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--accent-blue);
+            background: rgba(74, 125, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        .upload-zone i { font-size: 3rem; color: var(--accent-blue); margin-bottom: 1rem; }
+        .upload-zone p { color: var(--text-secondary); margin-bottom: 0.5rem; }
+        .upload-zone .btn-upload {
+            background: linear-gradient(135deg, var(--accent-blue), #3b6be8);
+            border: none;
+            padding: 0.6rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s;
+        }
+        .upload-zone .btn-upload:hover { transform: scale(1.05); box-shadow: 0 4px 20px rgba(74, 125, 255, 0.4); }
+
+        .nav-tabs-custom {
+            border-bottom: 2px solid var(--border-color);
+            gap: 0.5rem;
+        }
+        .nav-tabs-custom .nav-link {
+            color: var(--text-secondary);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px 12px 0 0;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .nav-tabs-custom .nav-link:hover { color: var(--text-primary); background: rgba(74, 125, 255, 0.05); }
+        .nav-tabs-custom .nav-link.active {
+            color: var(--accent-blue);
+            background: transparent;
+            border-bottom: 3px solid var(--accent-blue);
+        }
+        .nav-tabs-custom .nav-link i { margin-right: 8px; }
+
+        .result-image-container {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+        }
+        .result-image-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .result-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 4px;
+        }
+        .result-table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .result-table td {
+            padding: 0.75rem 1rem;
+            vertical-align: middle;
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+        }
+        .result-table tr:hover td { background: rgba(74, 125, 255, 0.05); }
+        .color-dot {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+        .badge-gender {
+            padding: 0.35rem 0.8rem;
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+        .badge-male { background: rgba(74, 125, 255, 0.2); color: #6b9dff; }
+        .badge-female { background: rgba(233, 66, 176, 0.2); color: #e942b0; }
+        .badge-age {
+            padding: 0.35rem 0.8rem;
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 0.8rem;
+            background: rgba(46, 204, 113, 0.15);
+            color: var(--accent-green);
+        }
+        .conf-bar {
+            height: 4px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.1);
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        .conf-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .webcam-container {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            aspect-ratio: 4/3;
+        }
+        .webcam-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .webcam-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+        }
+        .webcam-overlay i { font-size: 4rem; margin-bottom: 1rem; opacity: 0.5; }
+
+        .stats-card {
+            text-align: center;
+            padding: 1.5rem 1rem;
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .stats-card .number {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .stats-card .label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+        }
+
+        .spinner-custom {
+            width: 40px; height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .fade-in { animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .history-item {
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .history-item:hover { background: rgba(74, 125, 255, 0.08); border-color: rgba(74, 125, 255, 0.3); }
+        .history-item .time { font-size: 0.8rem; color: var(--text-secondary); }
+        .history-item .faces-count { font-weight: 600; color: var(--accent-blue); }
+
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+
+        .placeholder-glow { animation: placeholder-glow 2s ease-in-out infinite; }
+        @keyframes placeholder-glow {
+            50% { opacity: 0.3; }
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .section-title i { color: var(--accent-blue); }
+
+        @media (max-width: 768px) {
+            .container-main { padding: 1rem; }
+            .card-body { padding: 1rem; }
+            .upload-zone { padding: 2rem 1rem; }
+            .stats-card .number { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="container-fluid px-4">
+        <span class="navbar-brand">
+            <i class="bi bi-cpu"></i> Age & Gender Detection
+        </span>
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-secondary" style="font-size:0.85rem;">
+                <i class="bi bi-people-fill me-1"></i> Multi-Face Tracking
+            </span>
+            <span class="badge bg-primary bg-opacity-25 text-primary px-3 py-2 rounded-pill" style="font-size:0.75rem;">
+                <i class="bi bi-stars me-1"></i> Advanced
+            </span>
+        </div>
+    </div>
+</nav>
+
+<div class="container-main">
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs-custom" id="mainTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload-panel" type="button">
+                                <i class="bi bi-cloud-arrow-up"></i> Upload Image
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="webcam-tab" data-bs-toggle="tab" data-bs-target="#webcam-panel" type="button">
+                                <i class="bi bi-camera-video"></i> Webcam
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="upload-panel">
+                            <div class="upload-zone" id="uploadZone">
+                                <i class="bi bi-images"></i>
+                                <h5>Drop your image here</h5>
+                                <p>or click to browse · JPG, PNG, BMP supported</p>
+                                <input type="file" id="fileInput" accept="image/*" hidden>
+                                <button class="btn btn-upload mt-2" onclick="document.getElementById('fileInput').click()">
+                                    <i class="bi bi-folder2-open me-1"></i> Choose File
+                                </button>
+                            </div>
+                            <div id="uploadPreview" class="mt-3" style="display:none;">
+                                <div class="d-flex align-items-center gap-3 p-3" style="background:rgba(255,255,255,0.03); border-radius:12px; border:1px solid var(--border-color);">
+                                    <img id="previewThumb" style="width:60px;height:60px;object-fit:cover;border-radius:8px;">
+                                    <div class="flex-grow-1">
+                                        <div id="fileName" class="fw-semibold"></div>
+                                        <div id="fileSize" class="text-secondary" style="font-size:0.85rem;"></div>
+                                    </div>
+                                    <button class="btn btn-primary px-4" id="detectBtn" style="border-radius:50px;">
+                                        <i class="bi bi-search me-1"></i> Detect
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="webcam-panel">
+                            <div class="webcam-container">
+                                <video id="webcamVideo" autoplay playsinline style="display:none;"></video>
+                                <div class="webcam-overlay" id="webcamPlaceholder">
+                                    <i class="bi bi-camera-reels"></i>
+                                    <h5>Camera is off</h5>
+                                    <button class="btn btn-primary mt-2 px-4" id="startWebcamBtn" style="border-radius:50px;">
+                                        <i class="bi bi-play-fill me-1"></i> Start Camera
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2 mt-3">
+                                <button class="btn btn-danger px-4" id="captureBtn" disabled style="border-radius:50px;">
+                                    <i class="bi bi-camera me-1"></i> Capture
+                                </button>
+                                <button class="btn btn-outline-secondary px-4" id="stopWebcamBtn" disabled style="border-radius:50px;">
+                                    <i class="bi bi-stop me-1"></i> Stop
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="loadingIndicator" class="text-center py-4" style="display:none;">
+                        <div class="spinner-custom mx-auto mb-3"></div>
+                        <p class="text-secondary">Processing image... detecting faces...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4" id="resultCard" style="display:none;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-check-circle-fill text-success me-2"></i> Detection Results</span>
+                    <span class="badge bg-primary rounded-pill px-3 py-2" id="facesCountBadge">0 faces</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="stats-card">
+                                <div class="number" id="statFaces">0</div>
+                                <div class="label">Faces Detected</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stats-card">
+                                <div class="number" id="statAvgAge">-</div>
+                                <div class="label">Most Common Age</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stats-card">
+                                <div class="number" id="statTime">-</div>
+                                <div class="label">Processing Time</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-image-container mt-3">
+                        <img id="resultImage" src="" alt="Detection Result">
+                    </div>
+
+                    <div class="section-title mt-4">
+                        <i class="bi bi-table"></i> Face Details
+                    </div>
+                    <div class="table-responsive">
+                        <table class="result-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Color</th>
+                                    <th>Gender</th>
+                                    <th>Age Range</th>
+                                    <th>Gender Conf</th>
+                                    <th>Age Conf</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-clock-history me-2"></i> Detection History
+                </div>
+                <div class="card-body">
+                    <div id="historyEmpty" class="text-center py-5">
+                        <i class="bi bi-inbox" style="font-size:3rem;color:var(--text-secondary);"></i>
+                        <p class="text-secondary mt-2">No detections yet</p>
+                    </div>
+                    <div id="historyList"></div>
+                    <button class="btn btn-outline-danger w-100 mt-3" id="clearHistoryBtn" style="display:none;border-radius:50px;">
+                        <i class="bi bi-trash me-1"></i> Clear History
+                    </button>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <i class="bi bi-info-circle me-2"></i> About
+                </div>
+                <div class="card-body">
+                    <div style="font-size:0.9rem;color:var(--text-secondary);line-height:1.7;">
+                        <p><strong style="color:var(--text-primary);">Advanced Age & Gender Detection</strong> uses deep learning to detect faces and predict age & gender in real-time.</p>
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            <span class="badge bg-dark text-secondary px-3 py-2"><i class="bi bi-box me-1"></i> OpenCV DNN</span>
+                            <span class="badge bg-dark text-secondary px-3 py-2"><i class="bi bi-cpu me-1"></i> Caffe Models</span>
+                            <span class="badge bg-dark text-secondary px-3 py-2"><i class="bi bi-diagram-3 me-1"></i> CentroidTracker</span>
+                            <span class="badge bg-dark text-secondary px-3 py-2"><i class="bi bi-people me-1"></i> Multi-Face</span>
+                        </div>
+                        <hr style="border-color:var(--border-color);">
+                        <p class="mb-0"><strong>Age Ranges:</strong> (0-2), (4-6), (8-12), (15-20), (25-32), (38-43), (48-53), (60-100)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let history = [];
+    let mediaStream = null;
+
+    const fileInput = document.getElementById('fileInput');
+    const uploadZone = document.getElementById('uploadZone');
+    const uploadPreview = document.getElementById('uploadPreview');
+    const previewThumb = document.getElementById('previewThumb');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const detectBtn = document.getElementById('detectBtn');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const resultCard = document.getElementById('resultCard');
+    const resultImage = document.getElementById('resultImage');
+    const resultsBody = document.getElementById('resultsBody');
+    const facesCountBadge = document.getElementById('facesCountBadge');
+    const statFaces = document.getElementById('statFaces');
+    const statAvgAge = document.getElementById('statAvgAge');
+    const statTime = document.getElementById('statTime');
+    const historyList = document.getElementById('historyList');
+    const historyEmpty = document.getElementById('historyEmpty');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+    const webcamVideo = document.getElementById('webcamVideo');
+    const webcamPlaceholder = document.getElementById('webcamPlaceholder');
+    const startWebcamBtn = document.getElementById('startWebcamBtn');
+    const stopWebcamBtn = document.getElementById('stopWebcamBtn');
+    const captureBtn = document.getElementById('captureBtn');
+
+    let selectedFile = null;
+
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const icons = { success: 'bi-check-circle-fill', error: 'bi-x-circle-fill', warning: 'bi-exclamation-triangle-fill', info: 'bi-info-circle-fill' };
+        const bg = { success: '#2ecc71', error: '#e74c3c', warning: '#f39c12', info: '#4a7dff' };
+        const id = 'toast-' + Date.now();
+        container.innerHTML = `<div id="${id}" class="toast align-items-center text-white border-0 fade-in" role="alert" style="background:${bg[type]};border-radius:12px;">
+            <div class="d-flex">
+                <div class="toast-body"><i class="bi ${icons[type]} me-2"></i>${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>`;
+        const toast = new bootstrap.Toast(document.getElementById(id), { delay: 3000 });
+        toast.show();
+    }
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', (e) => { e.preventDefault(); uploadZone.classList.remove('dragover'); if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
+    fileInput.addEventListener('change', () => { if (fileInput.files.length) handleFile(fileInput.files[0]); });
+
+    function handleFile(file) {
+        if (!file.type.startsWith('image/')) { showToast('Please select an image file', 'warning'); return; }
+        selectedFile = file;
+        const reader = new FileReader();
+        reader.onload = (e) => { previewThumb.src = e.target.result; };
+        reader.readAsDataURL(file);
+        fileName.textContent = file.name;
+        fileSize.textContent = (file.size / 1024).toFixed(1) + ' KB';
+        uploadPreview.style.display = 'block';
+    }
+
+    detectBtn.addEventListener('click', () => {
+        if (!selectedFile) { showToast('Please select an image first', 'warning'); return; }
+        const formData = new FormData();
+        formData.append('image', selectedFile);
+        runDetection(formData);
+    });
+
+    async function runDetection(formData) {
+        loadingIndicator.style.display = 'block';
+        resultCard.style.display = 'none';
+        const startTime = performance.now();
+
+        try {
+            const resp = await fetch('/api/detect', { method: 'POST', body: formData });
+            const data = await resp.json();
+            const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
+
+            if (!data.success) { showToast(data.error || 'Detection failed', 'error'); loadingIndicator.style.display = 'none'; return; }
+
+            showResults(data, elapsed);
+            addHistory(data, elapsed);
+            showToast(`Detected ${data.faces} face(s)`, 'success');
+        } catch (err) {
+            showToast('Server error: ' + err.message, 'error');
+        }
+        loadingIndicator.style.display = 'none';
+    }
+
+    function showResults(data, elapsed) {
+        resultImage.src = data.result_image + '?t=' + Date.now();
+        facesCountBadge.textContent = data.faces + ' face(s)';
+        statFaces.textContent = data.faces;
+
+        const ageCounts = {};
+        data.results.forEach(r => { ageCounts[r.age] = (ageCounts[r.age] || 0) + 1; });
+        const mostCommonAge = Object.entries(ageCounts).sort((a,b) => b[1]-a[1])[0];
+        statAvgAge.textContent = mostCommonAge ? mostCommonAge[0] : '-';
+        statTime.textContent = elapsed + 's';
+
+        resultsBody.innerHTML = '';
+        data.results.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>#${r.id}</strong></td>
+                <td><span class="color-dot" style="background:rgb(${r.color[0]},${r.color[1]},${r.color[2]})"></span></td>
+                <td><span class="badge-gender ${r.gender.toLowerCase() === 'male' ? 'badge-male' : 'badge-female'}"><i class="bi ${r.gender === 'Male' ? 'bi-gender-male' : 'bi-gender-female'} me-1"></i>${r.gender}</span></td>
+                <td><span class="badge-age"><i class="bi bi-calendar me-1"></i>${r.age}</span></td>
+                <td>
+                    ${(r.gender_conf * 100).toFixed(1)}%
+                    <div class="conf-bar"><div class="conf-bar-fill ${r.gender.toLowerCase() === 'male' ? 'bg-primary' : 'bg-danger'}" style="width:${r.gender_conf*100}%"></div></div>
+                </td>
+                <td>
+                    ${(r.age_conf * 100).toFixed(1)}%
+                    <div class="conf-bar"><div class="conf-bar-fill bg-success" style="width:${r.age_conf*100}%"></div></div>
+                </td>
+            `;
+            resultsBody.appendChild(tr);
+        });
+
+        resultCard.style.display = 'block';
+        resultCard.classList.add('fade-in');
+    }
+
+    function addHistory(data, elapsed) {
+        const entry = {
+            timestamp: new Date().toLocaleTimeString(),
+            faces: data.faces,
+            results: data.results,
+            image: data.result_image,
+            elapsed: elapsed
+        };
+        history.unshift(entry);
+        if (history.length > 20) history.pop();
+        renderHistory();
+    }
+
+    function renderHistory() {
+        historyEmpty.style.display = history.length ? 'none' : 'block';
+        clearHistoryBtn.style.display = history.length ? 'block' : 'none';
+        historyList.innerHTML = history.map((h, i) => `
+            <div class="history-item d-flex justify-content-between align-items-center mb-2 fade-in" onclick="showHistoryItem(${i})">
+                <div>
+                    <div class="fw-semibold"><i class="bi bi-people-fill me-1" style="color:var(--accent-blue)"></i> ${h.faces} face(s)</div>
+                    <div class="time"><i class="bi bi-clock me-1"></i>${h.timestamp} · ${h.elapsed}s</div>
+                </div>
+                <div class="d-flex gap-1">
+                    ${h.results.slice(0,3).map(r => `<span class="color-dot" style="background:rgb(${r.color[0]},${r.color[1]},${r.color[2]})"></span>`).join('')}
+                    ${h.results.length > 3 ? `<span class="text-secondary" style="font-size:0.8rem;">+${h.results.length-3}</span>` : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function showHistoryItem(index) {
+        const h = history[index];
+        if (!h) return;
+        resultImage.src = h.image + '?t=' + Date.now();
+        facesCountBadge.textContent = h.faces + ' face(s)';
+        statFaces.textContent = h.faces;
+        statTime.textContent = h.elapsed + 's';
+        const ageCounts = {};
+        h.results.forEach(r => { ageCounts[r.age] = (ageCounts[r.age] || 0) + 1; });
+        const mostCommonAge = Object.entries(ageCounts).sort((a,b) => b[1]-a[1])[0];
+        statAvgAge.textContent = mostCommonAge ? mostCommonAge[0] : '-';
+        resultsBody.innerHTML = '';
+        h.results.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>#${r.id}</strong></td>
+                <td><span class="color-dot" style="background:rgb(${r.color[0]},${r.color[1]},${r.color[2]})"></span></td>
+                <td><span class="badge-gender ${r.gender.toLowerCase() === 'male' ? 'badge-male' : 'badge-female'}"><i class="bi ${r.gender === 'Male' ? 'bi-gender-male' : 'bi-gender-female'} me-1"></i>${r.gender}</span></td>
+                <td><span class="badge-age"><i class="bi bi-calendar me-1"></i>${r.age}</span></td>
+                <td>${(r.gender_conf * 100).toFixed(1)}%<div class="conf-bar"><div class="conf-bar-fill ${r.gender.toLowerCase() === 'male' ? 'bg-primary' : 'bg-danger'}" style="width:${r.gender_conf*100}%"></div></div></td>
+                <td>${(r.age_conf * 100).toFixed(1)}%<div class="conf-bar"><div class="conf-bar-fill bg-success" style="width:${r.age_conf*100}%"></div></div></td>
+            `;
+            resultsBody.appendChild(tr);
+        });
+        resultCard.style.display = 'block';
+        resultCard.classList.add('fade-in');
+    }
+
+    clearHistoryBtn.addEventListener('click', () => {
+        history = [];
+        renderHistory();
+        resultCard.style.display = 'none';
+        showToast('History cleared', 'info');
+    });
+
+    startWebcamBtn.addEventListener('click', async () => {
+        try {
+            mediaStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' } });
+            webcamVideo.srcObject = mediaStream;
+            webcamVideo.style.display = 'block';
+            webcamPlaceholder.style.display = 'none';
+            startWebcamBtn.disabled = true;
+            stopWebcamBtn.disabled = false;
+            captureBtn.disabled = false;
+            showToast('Camera started', 'info');
+        } catch (err) {
+            showToast('Camera access denied: ' + err.message, 'error');
+        }
+    });
+
+    stopWebcamBtn.addEventListener('click', () => {
+        if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+        webcamVideo.style.display = 'none';
+        webcamPlaceholder.style.display = 'flex';
+        startWebcamBtn.disabled = false;
+        stopWebcamBtn.disabled = true;
+        captureBtn.disabled = true;
+    });
+
+    captureBtn.addEventListener('click', () => {
+        if (!mediaStream) { showToast('Start camera first', 'warning'); return; }
+        const canvas = document.createElement('canvas');
+        canvas.width = webcamVideo.videoWidth;
+        canvas.height = webcamVideo.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(webcamVideo, 0, 0);
+        canvas.toBlob((blob) => {
+            const formData = new FormData();
+            formData.append('image', blob, 'webcam_capture.jpg');
+            runDetection(formData);
+        }, 'image/jpeg', 0.95);
+    });
+</script>
+</body>
+</html>
